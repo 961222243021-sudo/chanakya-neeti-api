@@ -15,5 +15,5 @@
     "check": "node scripts/validate-data.mjs",
     "build": "npm run check"
   },
-  "license": "UNLICENSED"
+  "license": "SEE LICENSE IN LICENSE"
 }

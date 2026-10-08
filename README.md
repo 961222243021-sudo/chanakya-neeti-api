@@ -14,11 +14,13 @@ Tamil verses · Simple English meanings · An API you can build with
 [![Node](https://img.shields.io/badge/Node.js-24-233a2d?style=flat-square)](package.json)
 [![Verses](https://img.shields.io/badge/verses-319-b7451e?style=flat-square)](https://chanakya-neeti-api.vercel.app/read/1.1#browse)
 [![Chapters](https://img.shields.io/badge/chapters-17-233a2d?style=flat-square)](https://chanakya-neeti-api.vercel.app/#browse)
+[![License](https://img.shields.io/badge/license-Proprietary-b7451e?style=flat-square)](LICENSE)
 [![Dependencies](https://img.shields.io/badge/runtime_dependencies-0-233a2d?style=flat-square)](package.json)
 
 **[Start reading →](https://chanakya-neeti-api.vercel.app/read/1.1#browse)** &nbsp; · &nbsp; **[Live website](https://chanakya-neeti-api.vercel.app)** &nbsp; · &nbsp; **[API guide](https://chanakya-neeti-api.vercel.app/docs)** &nbsp; · &nbsp; **[Try an endpoint](https://chanakya-neeti-api.vercel.app/api/v1/verses/10.15)**
 
-Developed by **Shyam**
+Developed by **Shyam**  
+© 2026 Shyam · All rights reserved.
 
 </div>
 
@@ -503,13 +505,20 @@ Before proposing a change:
 3. Update examples when changing response behavior.
 4. Keep English explanations concise and specific to their verses.
 
-**License:** the package is marked `UNLICENSED`; no open-source license has been granted.
+## License and copyright
+
+**© 2026 Shyam. All rights reserved.**
+
+This project uses the [Shyam Proprietary License](LICENSE). Copying, modifying, redistributing or commercially exploiting the project code or documentation requires prior written permission from Shyam, except where applicable law or the hosting platform terms permit it.
+
+Public website and API access remain available for their intended purposes. Third-party materials and public-domain content are excluded from this ownership claim. See [LICENSE](LICENSE) for the complete terms.
 
 ---
 
 <div align="center">
 
-**சாணக்கிய நீதி · Developed by Shyam**
+**சாணக்கிய நீதி · Developed by Shyam**  
+© 2026 Shyam · All rights reserved.
 
 [Read the first verse](https://chanakya-neeti-api.vercel.app/read/1.1#browse) &nbsp; · &nbsp; [Build with the API](https://chanakya-neeti-api.vercel.app/docs)
 
