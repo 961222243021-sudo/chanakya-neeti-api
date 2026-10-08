@@ -57,3 +57,14 @@ test('404 illustration and reader scripts are bundled and served',async()=>{
   const response=await request('/not-found.png');assert.equal(response.headers.get('content-type'),'image/png');
   assert.deepEqual(Buffer.from(await response.arrayBuffer()),readFileSync(new URL('../public/not-found.png',import.meta.url)));
 });
+test('responsive images are served by the function with WebP types and caching',async()=>{
+  for(const name of ['chanakya-modern-480','chanakya-modern-800','not-found-640','not-found-1200']) {
+    const response=await request(`/${name}.webp`);
+    assert.equal(response.status,200);
+    assert.equal(response.headers.get('content-type'),'image/webp');
+    assert.ok(response.headers.get('cache-control').includes('max-age=86400'));
+    const bytes=Buffer.from(await response.arrayBuffer());
+    assert.equal(bytes.subarray(8,12).toString(),'WEBP');
+    assert.deepEqual(bytes,readFileSync(new URL(`../public/${name}.webp`,import.meta.url)));
+  }
+});

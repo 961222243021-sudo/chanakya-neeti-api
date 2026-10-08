@@ -18,6 +18,7 @@ const browseClient = readFileSync(new URL('../public/browse.js', import.meta.url
 const notFoundClient = readFileSync(new URL('../public/not-found.js', import.meta.url), 'utf8');
 const client = readFileSync(new URL('../public/client.js', import.meta.url), 'utf8');
 const heroImage = readFileSync(new URL('../public/chanakya-modern.png', import.meta.url));
+const responsiveImages = new Map(['chanakya-modern-480', 'chanakya-modern-800', 'not-found-640', 'not-found-1200'].map(name => [`/${name}.webp`, readFileSync(new URL(`../public/${name}.webp`, import.meta.url))]));
 const style = readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
 const normalize = text => text.normalize('NFC').toLocaleLowerCase('en').replace(/[\s\u200b-\u200d]+/gu, '');
 const searchable = new Map(verses.map(v => [v.id, normalize(`${v.text.meaning_ta} ${v.text.transliteration_ta} ${v.topics.join(' ')} ${englishMeanings[v.id]}`)]));
@@ -118,6 +119,7 @@ async function route(url) {
   if (path === '/not-found.png') return { body: notFoundImage, type: 'image/png', ttl: 86400 };
   if (path === '/404.html') return { body: notFound, type: 'text/html; charset=utf-8', status: 404, cache: false };
   if (path === '/client.js') return { body: client, type: 'text/javascript; charset=utf-8' };
+  if (responsiveImages.has(path)) return { body: responsiveImages.get(path), type: 'image/webp', ttl: 86400 };
   if (path === '/style.css') return { body: style, type: 'text/css; charset=utf-8' };
   if (path === '/chanakya-modern.png') return { body: heroImage, type: 'image/png', ttl: 86400 };
   if (path === '/health') return { data: { status: 'ok', version, dataset_version: datasetVersion, records: verses.length }, cache: false };
