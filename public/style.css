@@ -108,3 +108,7 @@ label{font-size:13px}
   .browse-controls,.browse-reading{padding:18px 14px}
   .reading-progress{font-size:11px}
 }
+/* Tamil fallback fonts may provide regular glyphs without a semibold face. */
+[lang=ta]{font-family:"Noto Sans Tamil","Tamil Sangam MN",Latha,sans-serif;font-weight:400}
+.browse-controls label{font-weight:400}
+.browse-reading .verse-card>h3[lang=ta]{font-size:17px;font-weight:400}
