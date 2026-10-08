@@ -40,6 +40,10 @@ Explore **319 verses across 17 chapters** with Tamil-script text, Tamil explanat
 
 The English field explains the idea in short, modern language. It is an interpretation, not a word-for-word translation.
 
+## Complete project wiki
+
+Explore the [full wiki](docs/wiki/Home.md) for reader instructions, detailed endpoint behavior, examples, deployment, troubleshooting, architecture and contributing. Includes navigation, a copyright footer and an exporter for GitHub Wiki publication.
+
 ## Pick your starting point
 
 - **I want to read:** open [verse 1](https://chanakya-neeti-api.vercel.app/read/1.1#browse), then press **Next**.
