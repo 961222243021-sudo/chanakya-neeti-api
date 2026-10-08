@@ -40,9 +40,25 @@ Explore **319 verses across 17 chapters** with Tamil-script text, Tamil explanat
 
 The English field explains the idea in short, modern language. It is an interpretation, not a word-for-word translation.
 
+## See it in action
+
+Click either screenshot to open the original image and zoom in.
+
+### Website preview
+
+Tamil verses, simple English meanings and a numbered reader in one place.
+
+[![Chanakya Neeti website homepage — click to view full size](docs/images/website-preview.png)](docs/images/website-preview.png)
+
+### API response
+
+A successful `GET /api/v1/verses/1.13` request returning Tamil text, verse lines and an English explanation.
+
+[![Successful API response for chapter 1, verse 13 — click to view full size](docs/images/api-response.png)](docs/images/api-response.png)
+
 ## Complete project wiki
 
-Explore the [full wiki](docs/wiki/Home.md) for reader instructions, detailed endpoint behavior, examples, deployment, troubleshooting, architecture and contributing. Includes navigation, a copyright footer and an exporter for GitHub Wiki publication.
+Explore the [full wiki](https://github.com/961222243021-sudo/chanakya-neeti-api/wiki) for reader instructions, detailed endpoint behavior, examples, deployment, troubleshooting, architecture and contributing. Includes navigation, a copyright footer and an exporter for GitHub Wiki publication.
 
 ## Pick your starting point
 
