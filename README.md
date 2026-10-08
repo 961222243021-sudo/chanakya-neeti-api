@@ -7,6 +7,10 @@ Developed by **Shyam** · Version **1.2.0**
 Website: https://chanakya-neeti-api.vercel.app  
 Documentation: https://chanakya-neeti-api.vercel.app/docs
 
+## Read without using the API
+
+Open the homepage and tap **Start reading**. Choose a chapter, then a numbered verse. **Next** and **Previous** move through all 319 available verses, including chapter transitions. Tamil and English meanings appear together. The reader works without JavaScript through numbered links; selectors provide another way to navigate. Unknown pages and unavailable reader verses show an illustrated 404 with working recovery links. API errors remain JSON.
+
 ## Quick start
 
 ```sh

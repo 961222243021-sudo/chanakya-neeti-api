@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { renderBrowse } from './reader.mjs';
 import { createHash, randomInt, randomUUID, timingSafeEqual } from 'node:crypto';
 
 const load = name => JSON.parse(readFileSync(new URL(`../data/${name}.json`, import.meta.url), 'utf8'));
@@ -11,6 +12,10 @@ const lookup = new Map(verses.map(v => [v.id, v]));
 const version = '1.2.0';
 const datasetVersion = createHash('sha256').update(JSON.stringify({ verses, englishMeanings })).digest('hex').slice(0, 16);
 const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+const notFound = readFileSync(new URL('../public/404.html', import.meta.url), 'utf8');
+const notFoundImage = readFileSync(new URL('../public/not-found.png', import.meta.url));
+const browseClient = readFileSync(new URL('../public/browse.js', import.meta.url), 'utf8');
+const notFoundClient = readFileSync(new URL('../public/not-found.js', import.meta.url), 'utf8');
 const client = readFileSync(new URL('../public/client.js', import.meta.url), 'utf8');
 const heroImage = readFileSync(new URL('../public/chanakya-modern.png', import.meta.url));
 const style = readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
@@ -105,9 +110,13 @@ async function route(url) {
   const path = url.pathname.replace(/\/$/, '') || '/';
   const params = url.searchParams;
   if (['/', '/docs', '/api/docs'].includes(path) || /^\/read\/(?:[1-9]|1[0-7])\.[1-9]\d*$/u.test(path)) {
-    if (path.startsWith('/read/')) verseById(path.slice(6));
-    return { body: html, type: 'text/html; charset=utf-8' };
+    const selected = path.startsWith('/read/') ? verseById(path.slice(6)) : verses[0];
+    return { body: html.replace(/<!--BROWSE-START-->[\s\S]*?<!--BROWSE-END-->/u, () => `<!--BROWSE-START-->${renderBrowse(publicVerse(selected), verses, chapters)}<!--BROWSE-END-->`), type: 'text/html; charset=utf-8' };
   }
+  if (path === '/browse.js') return { body: browseClient, type: 'text/javascript; charset=utf-8' };
+  if (path === '/not-found.js') return { body: notFoundClient, type: 'text/javascript; charset=utf-8' };
+  if (path === '/not-found.png') return { body: notFoundImage, type: 'image/png', ttl: 86400 };
+  if (path === '/404.html') return { body: notFound, type: 'text/html; charset=utf-8', status: 404, cache: false };
   if (path === '/client.js') return { body: client, type: 'text/javascript; charset=utf-8' };
   if (path === '/style.css') return { body: style, type: 'text/css; charset=utf-8' };
   if (path === '/chanakya-modern.png') return { body: heroImage, type: 'image/png', ttl: 86400 };
@@ -185,18 +194,24 @@ export async function handleRequest(req) {
     headers.set('content-type', result.type ?? 'application/json; charset=utf-8');
     if (result.type?.startsWith('text/html')) headers.set('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
     if (result.attachment) headers.set('content-disposition', `attachment; filename="${result.attachment}"`);
-    const cache = result.cache !== false && !process.env.API_KEY;
+    const cache = !result.status && result.cache !== false && !process.env.API_KEY;
     headers.set('cache-control', cache ? `public, max-age=${result.ttl ?? 300}, must-revalidate` : 'no-store');
     if (cache) {
       const etag = `"${createHash('sha256').update(body).digest('hex')}"`;
       headers.set('etag', etag);
       if (req.headers.get('if-none-match')?.split(',').some(t => t.trim().replace(/^W\//, '') === etag || t.trim() === '*')) return new Response(null, { status: 304, headers });
     }
-    return new Response(req.method === 'HEAD' ? null : body, { status: 200, headers });
+    return new Response(req.method === 'HEAD' ? null : body, { status: result.status ?? 200, headers });
   } catch (error) {
     headers.set('content-type', 'application/json; charset=utf-8'); headers.set('cache-control', 'no-store');
     const expected = error instanceof ApiError;
     if (!expected) console.error('api_error', { requestId, error });
+    const url = new URL(req.url);
+    if (expected && error.status === 404 && !/^\/(?:api(?:\/|$)|data(?:\/|$)|health(?:\/|$))/u.test(url.pathname)) {
+      headers.set('content-type', 'text/html; charset=utf-8');
+      headers.set('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self'; frame-ancestors 'none'; base-uri 'none'");
+      return new Response(req.method === 'HEAD' ? null : notFound, { status: 404, headers });
+    }
     const body = JSON.stringify({ error: { code: expected ? error.code : 'INTERNAL_ERROR', message: expected ? error.message : 'Unexpected server error.', request_id: requestId } });
     return new Response(req.method === 'HEAD' ? null : body, { status: expected ? error.status : 500, headers });
   }
