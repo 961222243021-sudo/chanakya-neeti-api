@@ -105,8 +105,8 @@ function showReader(payload) {
   reader.replaceChildren();
   if (payload.error) { reader.append(node('h3', payload.error.code), node('p', payload.error.message)); return; }
   const data = payload.data ?? (payload.records ? { results: payload.records } : undefined);
-  const list = data?.verse ? [data.verse] : data?.text ? [data] : Array.isArray(data) ? data : data?.results ?? [];
-  const records = list.map(item => item?.verse ?? item).filter(item => item?.text?.meaning_ta);
+  const list = data?.text ? [data] : data?.verse?.text ? [data.verse] : Array.isArray(data) ? data : data?.results ?? [];
+  const records = list.map(item => item?.verse?.text ? item.verse : item).filter(item => item?.text?.meaning_ta);
   if (!records.length) { reader.append(node('p', 'This response contains metadata or no matching verses. Open the JSON tab for details.')); return; }
   if (data?.date) reader.append(node('p', `${data.date} · ${data.timezone}`, 'reader-meta'));
   for (const verse of records) {
