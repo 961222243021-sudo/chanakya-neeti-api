@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { handleRequest } from './src/app.mjs';
+import { handleRequest } from '../src/app.mjs';
 
 const server = createServer(async (req, res) => {
   try {

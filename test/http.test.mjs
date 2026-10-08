@@ -4,7 +4,7 @@ import { once } from 'node:events';
 
 test('real HTTP adapter serves docs search export errors and HEAD', async () => {
   process.env.PORT = '0';
-  const { default: server } = await import('../server.mjs');
+  const { default: server } = await import('../scripts/serve.mjs');
   if (!server.listening) await once(server, 'listening');
   const origin = `http://127.0.0.1:${server.address().port}`;
   try {

@@ -77,21 +77,21 @@ Environment variables:
 | `API_KEY` | unset | When set, protect `/api/v1` data routes with `x-api-key` |
 | `CORS_ORIGINS` | `*` | Allowed browser origins, comma separated |
 
-API key checks use a constant-time digest comparison. API keys are not saved by the playground. CORS controls browser access; it is not authentication. Health, documentation, assets, and OpenAPI stay public. Configure secrets in the hosting dashboard or your shell; `.env` files are not loaded automatically. For a local env file, use `node --env-file=.env server.mjs`.
+API key checks use a constant-time digest comparison. API keys are not saved by the playground. CORS controls browser access; it is not authentication. Health, documentation, assets, and OpenAPI stay public. Configure secrets in the hosting dashboard or your shell; `.env` files are not loaded automatically. For a local env file, use `node --env-file=.env scripts/serve.mjs`.
 
 ## Deploy
 
 ### Vercel
 
-The root `server.mjs` calls `server.listen()` and follows Vercel's native Node.js HTTP server entrypoint format. `vercel.json` configures the data-validation build.
+The explicit `api/index.js` entrypoint exports the shared Web Request/Response handler. `vercel.json` sets the Other framework preset, publishes `public/`, routes incoming paths to the function, and explicitly includes the dataset and page assets in the function bundle. The local server lives in `scripts/serve.mjs`, outside framework entrypoint detection.
 
 1. Put this folder's contents in a Git repository.
 2. Import that repository into Vercel.
-3. Use the **Other** framework preset and Node.js 24. Keep output directory unset.
+3. Use the **Other** framework preset and Node.js 24. The repository configuration sets the output directory to `public`; remove any conflicting dashboard override.
 4. Set environment variables if desired, then deploy.
 5. Check `/health`, `/docs`, and `/api/v1/verses/1.6` on the deployed URL.
 
-The project has been tested locally, including its HTTP adapter. A cloud deployment has not been executed or verified in this delivery. Reference: https://vercel.com/docs/functions/runtimes/node-js
+The project has been tested locally, including its HTTP adapter and explicit Vercel function export. Hosted verification remains pending: the current Vercel connection denied access to this project’s deployment details. Reference: https://vercel.com/docs/functions/runtimes/node-js
 
 ### Docker or another Node host
 
@@ -131,4 +131,15 @@ The importer targets this specific edition and its page ranges. Re-running repla
 
 ## Project map
 
-`src/app.mjs` is the shared request handler, `server.mjs` is the HTTP adapter, `src/openapi.mjs` is the API contract, `data/` contains edition records, `public/` contains the documentation playground, `scripts/` contains extraction and integrity checks, and `test/` contains endpoint tests. See `docs/DEVELOPMENT_PLAN.md` for decisions, delivered scope and release gates.
+`src/app.mjs` is the shared request handler, `scripts/serve.mjs` is the local HTTP adapter and `api/index.js` is the Vercel function, `src/openapi.mjs` is the API contract, `data/` contains edition records, `public/` contains the documentation playground, `scripts/` contains extraction and integrity checks, and `test/` contains endpoint tests. See `docs/DEVELOPMENT_PLAN.md` for decisions, delivered scope and release gates.
+
+## Correct deployed URLs
+
+If your assigned domain is `chanakya-neeti-api.vercel.app`, open:
+
+- Homepage: https://chanakya-neeti-api.vercel.app/
+- Verse: https://chanakya-neeti-api.vercel.app/api/v1/verses/1.6
+- Daily: https://chanakya-neeti-api.vercel.app/api/v1/daily
+- Docs: https://chanakya-neeti-api.vercel.app/docs
+
+Always retain the slash before `api`: `.vercel.app/api`, never `.vercel.appapi`. The homepage generates the full endpoint from its actual deployed origin, so copied URLs use the correct domain.

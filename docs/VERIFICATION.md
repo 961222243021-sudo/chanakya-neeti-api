@@ -5,6 +5,7 @@ Developed by Shyam. Checked on 2026-10-08 with Node.js 24.19.0.
 | Check | Result |
 | --- | --- |
 | Request-handler tests | 25 passed, 0 failed |
+| Explicit Vercel entrypoint and routing tests | 2 passed, 0 failed |
 | Real HTTP integration test | 1 passed, 0 failed |
 | Dataset validation | Passed: 319 unique main-text records, 17 chapters |
 | Source numbering gaps | Preserved: chapter 13, verses 4–7 and 11 |
@@ -12,7 +13,7 @@ Developed by Shyam. Checked on 2026-10-08 with Node.js 24.19.0.
 | Residual legacy Greek code points in normalized records | None detected |
 | Raw extraction and source pages | Present for every main-text record |
 | Browser screenshot / interaction review | Attempted; unavailable because Chromium is not installed |
-| Vercel deployment | Configuration supplied; not deployed or tested remotely |
+| Vercel deployment | Explicit function, routing and bundle configuration supplied; current connection denied deployment access, so hosted verification is pending |
 | Docker runtime | Configuration supplied; not built or executed |
 | Human proofreading | Not complete; all 319 records marked unreviewed |
 | Public translation rights | Not established |

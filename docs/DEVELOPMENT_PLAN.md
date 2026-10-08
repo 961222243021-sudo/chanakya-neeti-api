@@ -39,7 +39,7 @@ Acceptance: consistent response envelopes, bounded pagination and batches, valid
 
 ## Phase 3 — Verification and packaging: delivered
 
-Run 25 request-handler tests, one real HTTP integration test and a separate integrity validation. Package source, complete extracted data, documentation and the plan together. Keep source PDF outside the package. Browser visual testing was attempted but unavailable because no Chromium executable is installed; desktop/mobile appearance and browser interactions still require visual review.
+Run 25 request-handler tests, one real HTTP integration test, two Vercel entrypoint/configuration tests and a separate integrity validation. Package source, complete extracted data, documentation and the plan together. Keep source PDF outside the package. Browser visual testing was attempted but unavailable because no Chromium executable is installed; desktop/mobile appearance and browser interactions still require visual review.
 
 ## Phase 4 — Editorial release: remaining
 

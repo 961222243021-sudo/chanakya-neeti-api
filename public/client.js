@@ -3,6 +3,12 @@ const endpoint = document.querySelector('#endpoint');
 const result = document.querySelector('#result');
 const status = document.querySelector('#status');
 const run = document.querySelector('#run');
+const fullEndpoint = document.querySelector('#full-endpoint');
+fullEndpoint.value = new URL('/api/v1/verses/1.6', location.origin).href;
+document.querySelector('#copy-endpoint').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(fullEndpoint.value); status.textContent = 'Full endpoint copied.'; }
+  catch { fullEndpoint.focus(); fullEndpoint.select(); status.textContent = 'Select and copy the full endpoint above.'; }
+});
 document.querySelector('#preset').addEventListener('change', event => { endpoint.value = event.target.value; });
 form.addEventListener('submit', async event => {
   event.preventDefault(); run.disabled = true; status.textContent = 'Loading…';
