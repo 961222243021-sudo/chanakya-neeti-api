@@ -1,85 +1,221 @@
-# Chanakya Neeti API
+<div align="center">
 
-Developed by **Shyam** · Version **1.2.0**
+<img src="public/chanakya-modern.png" width="220" alt="Modern Chanakya wearing a saffron shawl and sunglasses" />
 
-319 verses across 17 chapters, with Tamil text, Tamil explanations and individual plain-English meanings. Includes search, daily and random selection, a responsive reader and a complete usage guide with a live playground.
+# சாணக்கிய நீதி
 
-Website: https://chanakya-neeti-api.vercel.app  
-Documentation: https://chanakya-neeti-api.vercel.app/docs
+### Chanakya Neeti API
 
-## Read without using the API
+**Old words. Fresh perspective.**
 
-Open the homepage and tap **Start reading**. Choose a chapter, then a numbered verse. **Next** and **Previous** move through all 319 available verses, including chapter transitions. Tamil and English meanings appear together. The reader works without JavaScript through numbered links; selectors provide another way to navigate. Unknown pages and unavailable reader verses show an illustrated 404 with working recovery links. API errors remain JSON.
+Tamil verses · Simple English meanings · An API you can build with
 
-## Quick start
+[![Version](https://img.shields.io/badge/version-1.2.0-b7451e?style=flat-square)](package.json)
+[![Node](https://img.shields.io/badge/Node.js-24-233a2d?style=flat-square)](package.json)
+[![Verses](https://img.shields.io/badge/verses-319-b7451e?style=flat-square)](https://chanakya-neeti-api.vercel.app/read/1.1#browse)
+[![Chapters](https://img.shields.io/badge/chapters-17-233a2d?style=flat-square)](https://chanakya-neeti-api.vercel.app/#browse)
+[![Dependencies](https://img.shields.io/badge/runtime_dependencies-0-233a2d?style=flat-square)](package.json)
+
+**[Start reading →](https://chanakya-neeti-api.vercel.app/read/1.1#browse)** &nbsp; · &nbsp; **[Live website](https://chanakya-neeti-api.vercel.app)** &nbsp; · &nbsp; **[API guide](https://chanakya-neeti-api.vercel.app/docs)** &nbsp; · &nbsp; **[Try an endpoint](https://chanakya-neeti-api.vercel.app/api/v1/verses/10.15)**
+
+Developed by **Shyam**
+
+</div>
+
+---
+
+## A little perspective. One verse at a time.
+
+Explore **319 verses across 17 chapters** with Tamil-script text, Tamil explanations and individual English meanings. Read them in a simple numbered browser, or use the REST API in your own website, app or daily-reading project.
+
+| For readers | For developers |
+| :--- | :--- |
+| Choose a chapter and tap a verse number | Versioned, read-only REST endpoints |
+| Read Tamil and English together | Search Tamil text and English meanings |
+| Move with **Previous** and **Next** | Daily, random, batch and related verses |
+| See your position, such as **1 of 319** | Pagination, filters and JSON/NDJSON exports |
+| Open a direct link to any available verse | Optional API keys, CORS controls and ETags |
+
+The English field explains the idea in short, modern language. It is an interpretation, not a word-for-word translation.
+
+## Pick your starting point
+
+- **I want to read:** open [verse 1](https://chanakya-neeti-api.vercel.app/read/1.1#browse), then press **Next**.
+- **I want to build:** copy the [first request](#your-first-api-request).
+- **I want to run it locally:** follow [local setup](#run-locally).
+- **I want to deploy:** use the [Vercel configuration](#deploy-on-vercel).
+
+<details>
+<summary><strong>Browse the full guide</strong></summary>
+
+- [Read without writing code](#read-without-writing-code)
+- [Your first API request](#your-first-api-request)
+- [Understand the response](#understand-the-response)
+- [Every endpoint](#every-endpoint)
+- [Parameters and filters](#parameters-and-filters)
+- [Build with JavaScript or Python](#build-with-javascript-or-python)
+- [Pagination and exports](#pagination-and-exports)
+- [Errors and caching](#errors-and-caching)
+- [Run locally](#run-locally)
+- [Deploy on Vercel](#deploy-on-vercel)
+- [Configuration](#configuration)
+- [Project structure](#project-structure)
+- [Verification and contributing](#verification-and-contributing)
+
+</details>
+
+## Read without writing code
+
+1. Open the [reader](https://chanakya-neeti-api.vercel.app/read/1.1#browse).
+2. Choose **Chapter 1–17** from the chapter selector.
+3. Tap a numbered verse, or use the verse selector.
+4. Read the Tamil text, Tamil meaning and plain-English explanation.
+5. Press **Next** or **Previous** to continue.
+
+**No URL editing. No JSON knowledge needed.** Next automatically continues into the following chapter and skips unavailable verse numbers. The numbered links work without JavaScript; selectors offer another way to navigate.
+
+Unknown pages and unavailable reader verses show an illustrated 404 page with working **Home**, **Start reading** and **Go back** controls.
+
+## Your first API request
+
+**Base URL**
+
+```text
+https://chanakya-neeti-api.vercel.app/api/v1
+```
+
+**Get one verse**
 
 ```sh
 curl 'https://chanakya-neeti-api.vercel.app/api/v1/verses/10.15'
 ```
 
 ```js
-const response = await fetch('https://chanakya-neeti-api.vercel.app/api/v1/verses/10.15');
+const response = await fetch(
+  'https://chanakya-neeti-api.vercel.app/api/v1/verses/10.15'
+);
 const payload = await response.json();
+
 if (!response.ok) throw new Error(payload.error.message);
+
 console.log(payload.data.text.english_meaning);
 ```
 
-Public deployments need no account or key. All endpoints are read-only: GET, HEAD and OPTIONS. IDs are strings with a dot: `10.15` means chapter 10, verse 15. Use `/api/v1/chapters` for available numbers.
+> **How IDs work:** `"10.15"` means chapter **10**, verse **15**. Keep IDs as strings. Use the chapter index to find available verse numbers.
 
-## Verse fields
+Public access needs no key unless the owner enables one. The API supports **GET**, **HEAD** and **OPTIONS**.
 
-| Field | Meaning |
-| --- | --- |
-| `id`, `chapter`, `verse` | String ID and integer chapter/verse numbers |
-| `text.transliteration_ta` | Tamil-script verse as one clean line |
-| `text.lines_ta` | Ordered lines for layout |
-| `text.meaning_ta` | Tamil explanation |
-| `text.english_meaning` | Short modern English interpretation, not a word-for-word translation |
-| `topics` | Discovery topic IDs |
-| `meta` | API version, content checksum version and Shyam credit |
+## Understand the response
 
-Every public verse object includes both meanings. Normal JSON uses `{data, meta}`. Render lines as separate paragraphs and insert strings with `textContent` rather than `innerHTML`. Plain-text output contains actual line breaks and both meanings.
+A single-verse request returns the verse in `data` and version/developer information in `meta`.
 
-## Complete endpoint reference
+```json
+{
+  "data": {
+    "id": "10.15",
+    "chapter": 10,
+    "verse": 15,
+    "text": {
+      "transliteration_ta": "ஏக வ்ருக்ஷ ஸம ஆரூடா நானாவர்ணா விஹங்கமா: | ப்ராபாதே திக்ஷு தசஸு யான்தி கா தத்ர வேதனா ||",
+      "meaning_ta": "பலவகைப் பறவைகள் ஒன்று கூடி ஓர் இரவை ஒரு மரத்தில் கழிக்கின்றன. அவை பல வண்ணம் கொண்டவை; பல இனத்தவை. கூடியிருந்த அவையனைத்தும் விடிந்ததும் பல்வேறு திசைகளில் பறந்து போய்விடுவன. இதில் துக்கப்படுவதற்கு என்ன இருக்கிறது? பிரிவு இயல்பானது. அதற்குத் துக்கப்படுவதேன்? துயரப்படுவதேன்?",
+      "lines_ta": [
+        "ஏக வ்ருக்ஷ ஸம ஆரூடா",
+        "நானாவர்ணா விஹங்கமா: |",
+        "ப்ராபாதே திக்ஷு தசஸு",
+        "யான்தி கா தத்ர வேதனா ||"
+      ],
+      "english_meaning": "People can share a chapter of life and then go their separate ways, like birds leaving the same tree in the morning. Appreciate the time together; moving on is natural, even when it hurts."
+    },
+    "topics": [
+      "resilience"
+    ]
+  },
+  "meta": {
+    "api_version": "1.2.0",
+    "dataset_version": "c8391e0a84931676",
+    "developed_by": "Shyam"
+  }
+}
+```
 
-| GET path | Parameters | Response location |
-| --- | --- | --- |
-| `/api/v1` | None | `data`: API identity and counts |
-| `/api/v1/verses/{id}` | `format`, `include_raw` | `data`: one verse |
-| `/api/v1/verses` | Filters, `q`, `match`, `page`, `limit`, `include_raw` | `data.results[]`, `data.pagination` |
-| `/api/v1/verses/{id}/related` | `limit` (default 5, max 20) | `data.results[]`: each has `verse`, `shared_topics`; `data.method` describes matching |
-| `/api/v1/daily` | Filters, `date`, `format`, `include_raw` | `data.verse`, `data.date`, `data.timezone` |
-| `/api/v1/random` | Filters, `count`, `include_raw` | `data[]`, including when count is 1 |
-| `/api/v1/chapters` | None | `data[]`: counts and available numbers |
-| `/api/v1/chapters/{chapter}` | `page`, `limit`, `include_raw` | `data.chapter`, `data.results[]`, `data.pagination` |
-| `/api/v1/topics` | None | `data[]`: topic IDs and counts |
-| `/api/v1/batch` | `ids` required, `include_raw` | `data[]` in requested order |
-| `/api/v1/export` | Filters, `format`, `include_raw` | `{dataset_version, records[]}` for JSON; one verse per line for NDJSON |
-| `/api/v1/quality` | None | `data`: integrity and editorial-status summary |
-| `/health` | None | `data.status` and counts |
+| Field | Type | Use |
+| :--- | :--- | :--- |
+| `id` | String | Stable chapter-and-verse identifier |
+| `chapter`, `verse` | Integers | Numbered location in the collection |
+| `text.transliteration_ta` | String | Tamil-script verse, flattened into one line |
+| `text.lines_ta` | String array | Verse lines in display order |
+| `text.meaning_ta` | String | Tamil explanation |
+| `text.english_meaning` | String | Short, accessible English interpretation |
+| `topics` | String array | Discovery tags; may be empty |
+| `meta.api_version` | String | API contract version |
+| `meta.dataset_version` | String | Content checksum version |
+| `meta.developed_by` | String | Developer credit: Shyam |
 
-Website routes: `/`, `/docs`, `/api/docs` and `/read/{id}`. The guide contains cURL, JavaScript rendering/search/pagination/export, Python and optional authentication examples. Specification routes have been removed.
+Every public verse object includes both meanings. Use `lines_ta` for layout and insert strings with `textContent` in HTML. Parsing JSON handles escape sequences; avoid manually modifying the raw response.
+
+**Want plain text?** Add `?format=text` to a single-verse or daily request. It includes the verse lines and both meanings with actual line breaks.
+
+## Every endpoint
+
+Paths below are relative to the website domain. All requests use GET.
+
+| Endpoint | What it does | Where to read the result |
+| :--- | :--- | :--- |
+| `/api/v1` | API overview and collection counts | `data` |
+| `/api/v1/verses/{id}` | One verse | `data` |
+| `/api/v1/verses` | Browse and search | `data.results[]`, `data.pagination` |
+| `/api/v1/verses/{id}/related` | Verses with shared topics | `data.results[]` → `verse`, `shared_topics` |
+| `/api/v1/daily` | One daily verse, using Asia/Kolkata | `data.verse`, `data.date`, `data.timezone` |
+| `/api/v1/random` | Unique random verses | `data[]`, even when count is 1 |
+| `/api/v1/chapters` | Chapter counts and available verse numbers | `data[]` |
+| `/api/v1/chapters/{chapter}` | Browse one chapter | `data.chapter`, `data.results[]`, `data.pagination` |
+| `/api/v1/topics` | Valid topic IDs and counts | `data[]` |
+| `/api/v1/batch` | Several verses in requested order | `data[]` |
+| `/api/v1/export` | Download all or filtered verses | JSON: `records[]`; NDJSON: one verse per line |
+| `/api/v1/quality` | Integrity and editorial-status summary | `data` |
+| `/health` | Service status and counts | `data.status` |
+
+**Website routes:** `/` for the homepage, `/docs` or `/api/docs` for the guide, and `/read/{id}` for a verse reader.
+
+<details>
+<summary><strong>Parameters accepted by each endpoint</strong></summary>
+
+| Endpoint | Accepted parameters |
+| :--- | :--- |
+| Single verse | `format`, `include_raw` |
+| Browse/search | Filters, `q`, `match`, `page`, `limit`, `include_raw` |
+| Related | `limit` |
+| Daily | Filters, `date`, `format`, `include_raw` |
+| Random | Filters, `count`, `include_raw` |
+| Chapter browse | `page`, `limit`, `include_raw` |
+| Batch | `ids` required, `include_raw` |
+| Export | Filters, `format`, `include_raw` |
+| Overview, chapter index, topics, quality, health | No query parameters needed |
+
+“Filters” means `chapter`, `topic` and `review`. Combine them on browse, daily, random and export endpoints.
+
+</details>
 
 ## Parameters and filters
 
-“Filters” means `chapter`, `topic` and `review`, combined with AND. Available on verse browse, daily, random and export.
+| Parameter | Allowed values | Default / behavior |
+| :--- | :--- | :--- |
+| `chapter` | Integer 1–17 | Omitted: all chapters |
+| `topic` | Exact ID from `/api/v1/topics` | Omitted: all topics |
+| `review` | `reviewed`, `unreviewed` | Omitted: both |
+| `q` | 1–200 characters | Searches Tamil text, English meanings and topic keywords |
+| `match` | `all`, `any` | `all`; applies when `q` is present |
+| `page` | Integer 1–1,000,000 | 1 |
+| `limit` | Browse/chapter: 1–100; related: 1–20 | Browse/chapter: 20; related: 5 |
+| `count` | Random: 1–20 | 1; unique within the request |
+| `date` | Real `YYYY-MM-DD` date | Today in Asia/Kolkata |
+| `ids` | 1–50 comma-separated IDs | Required for batch; preserves order and duplicates |
+| `format` | Single/daily: `json`, `text`; export: `json`, `ndjson` | `json` |
+| `include_raw` | `true`, `false` | `false`; adds optional `raw_text` |
 
-| Parameter | Allowed values / default |
-| --- | --- |
-| `chapter` | 1–17; omitted means all |
-| `topic` | Exact ID from `/api/v1/topics`; omitted means all |
-| `review` | `reviewed` or `unreviewed`; omitted means both |
-| `q` | 1–200 characters; searches Tamil text, English meanings and topic keywords |
-| `match` | `all` default or `any`; applies to q words separated by spaces/commas |
-| `page` | 1–1,000,000; default 1 |
-| `limit` | Browse/chapter: 1–100, default 20; related: 1–20, default 5 |
-| `count` | Random: 1–20; default 1; unique within a request |
-| `date` | Real YYYY-MM-DD date; default today in Asia/Kolkata |
-| `ids` | Batch: 1–50 comma-separated IDs; preserves order and duplicates |
-| `format` | Single/daily: json default or text; export: json default or ndjson |
-| `include_raw` | true or false default; adds optional raw_text; use normal fields for display |
+Search is case-insensitive, Unicode-normalized keyword matching. Spaces or commas separate query words. `match=all` requires every word; `match=any` requires at least one. Filters combine with AND. Related results use shared topic tags, not semantic similarity.
 
-Search is Unicode-normalized and case-insensitive keyword matching. Related verses share topic tags. Use `URLSearchParams` to encode Tamil values. Unsupported, repeated and invalid parameters return 400. Match has an effect only when q is present.
+**Copy a useful request**
 
 ```text
 /api/v1/verses?chapter=1&topic=money&limit=5
@@ -91,40 +227,290 @@ Search is Unicode-normalized and case-insensitive keyword matching. Related vers
 /api/v1/export?format=ndjson&chapter=10
 ```
 
-Daily selection is stable for the same date, filters and content version. Content updates may change that selection. Random returns 404 if fewer candidates than count. A batch with any missing ID fails as a whole. Browse with zero matches returns an empty results array. Chapter 13's unavailable numbers return 404.
+<details>
+<summary><strong>Selection rules and edge cases</strong></summary>
+
+- Daily selection stays the same for the same date, filters and content version. A content update can change the selected verse.
+- Random returns 404 if the matching pool is smaller than `count`.
+- A batch fails as a whole if any ID is invalid or unavailable.
+- Browse with no matches returns an empty `results` array and `pages: 0`.
+- A page beyond the last page returns an empty array.
+- Unavailable verse numbers return 404; use the chapter index or the numbered reader.
+- Unsupported, repeated or invalid parameters on validated endpoints return 400.
+
+</details>
+
+## Build with JavaScript or Python
+
+### Search Tamil or English
+
+Use `URLSearchParams` to encode query values correctly.
+
+```js
+const url = new URL(
+  '/api/v1/verses', 'https://chanakya-neeti-api.vercel.app'
+);
+url.search = new URLSearchParams({ q: 'பணம்', limit: '5' });
+
+const response = await fetch(url);
+const payload = await response.json();
+if (!response.ok) throw new Error(payload.error.message);
+
+for (const verse of payload.data.results) {
+  console.log(verse.id, verse.text.english_meaning);
+}
+```
+
+### Display a verse on your page
+
+Add `<div id="verse"></div>` to the page, then run:
+
+```js
+async function showVerse() {
+  const response = await fetch(
+    'https://chanakya-neeti-api.vercel.app/api/v1/verses/10.15'
+  );
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error.message);
+
+  const container = document.getElementById('verse');
+  const { text } = payload.data;
+  container.replaceChildren();
+
+  for (const line of text.lines_ta) {
+    const p = document.createElement('p');
+    p.lang = 'ta';
+    p.textContent = line;
+    container.append(p);
+  }
+
+  for (const [field, language] of [
+    ['meaning_ta', 'ta'], ['english_meaning', 'en']
+  ]) {
+    const p = document.createElement('p');
+    p.lang = language;
+    p.textContent = text[field];
+    container.append(p);
+  }
+}
+
+showVerse().catch(error => {
+  document.getElementById('verse').textContent = error.message;
+});
+```
+
+### Python, with no extra packages
+
+```python
+import json
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
+
+url = 'https://chanakya-neeti-api.vercel.app/api/v1/verses/10.15'
+
+try:
+    with urlopen(url, timeout=15) as response:
+        verse = json.load(response)['data']
+    print('\n'.join(verse['text']['lines_ta']))
+    print(verse['text']['meaning_ta'])
+    print(verse['text']['english_meaning'])
+except HTTPError as error:
+    print(error.code, json.load(error)['error']['message'])
+except URLError as error:
+    print('Connection failed:', error.reason)
+```
 
 ## Pagination and exports
 
-`data.pagination` contains `page`, `limit`, `total`, `pages` and `has_next`. Start at page 1 and increment until has_next is false, keeping filters unchanged. A page past the end is empty; zero matches have pages 0.
+### Browse the full collection
 
-Exports omit the data/meta envelope. Parse `records` for JSON. For NDJSON, split on line breaks, remove empty lines and parse each line independently. Both formats include English meanings and support the same filters as above.
+`data.pagination` contains `page`, `limit`, `total`, `pages` and `has_next`. Keep your filters unchanged between pages.
+
+```js
+const records = [];
+let page = 1;
+
+while (true) {
+  const url = new URL(
+    '/api/v1/verses', 'https://chanakya-neeti-api.vercel.app'
+  );
+  url.search = new URLSearchParams({ page: String(page), limit: '100' });
+  const response = await fetch(url);
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error.message);
+
+  records.push(...payload.data.results);
+  if (!payload.data.pagination.has_next) break;
+  page++;
+}
+
+console.log(records.length);
+```
+
+### Download once instead
+
+```sh
+# JSON collection: { dataset_version, records }
+curl 'https://chanakya-neeti-api.vercel.app/api/v1/export' -o verses.json
+
+# NDJSON: one complete verse per line
+curl 'https://chanakya-neeti-api.vercel.app/api/v1/export?chapter=10&format=ndjson' \
+  -o chapter-10.ndjson
+```
+
+Exports include English meanings and support filters. JSON exports use `records`, without a `data`/`meta` envelope. For NDJSON, split into nonempty lines and parse each line separately.
+
+```js
+const response = await fetch(
+  'https://chanakya-neeti-api.vercel.app/api/v1/export?format=ndjson&chapter=10'
+);
+if (!response.ok) throw new Error((await response.json()).error.message);
+const text = await response.text();
+const verses = text.split('\n').filter(line => line.trim()).map(JSON.parse);
+console.log(verses[0].text.english_meaning);
+```
 
 ## Errors and caching
 
+API errors return JSON. Missing website pages return the illustrated HTML 404.
+
 ```json
-{"error":{"code":"VERSE_NOT_FOUND","message":"Requested verse number is unavailable.","request_id":"…"}}
+{
+  "error": {
+    "code": "VERSE_NOT_FOUND",
+    "message": "Requested verse number is unavailable.",
+    "request_id": "…"
+  }
+}
 ```
 
-400: invalid input; 401: required key missing/invalid; 404: unavailable route/verse/candidates; 405: unsupported method; 414: URL over 4,096 characters; 500: unexpected error. Read error.message; report request_id when needed. OPTIONS returns 204. HEAD returns headers without a body.
+| HTTP status | Meaning / next step |
+| :--- | :--- |
+| `200` | Successful request |
+| `204` | Successful OPTIONS preflight; no body |
+| `304` | Content unchanged; reuse your saved body |
+| `400` | Invalid input; read `error.message` |
+| `401` | Supply the configured `x-api-key` |
+| `404` | Route, verse or required candidates unavailable |
+| `405` | Use GET, HEAD or OPTIONS |
+| `414` | Request URL exceeds 4,096 characters |
+| `500` | Unexpected error; report the request ID |
 
-Most public responses use short caching and ETag. Send the saved ETag as If-None-Match; a 304 means reuse your saved response, with no JSON to parse. Random, health and key-protected results use no-store. CORS defaults to all origins and can be restricted by the owner.
+Most public responses use short caching and an `ETag`. Send the saved value in `If-None-Match`; a 304 has no body to parse. Random, health, error and key-protected responses use `no-store`. HEAD returns headers without a body. `x-request-id` identifies a request.
 
 ## Run locally
 
-Requires Node.js 24. No runtime dependencies or database.
+**Requires Node.js 24.** No runtime dependencies or database setup.
 
 ```sh
+git clone https://github.com/961222243021-sudo/chanakya-neeti-api.git
+cd chanakya-neeti-api
 npm start
-npm test
-npm run build
 ```
 
-Visit http://localhost:3000. PORT defaults to 3000. Set API_KEY to require x-api-key for all /api/v1 requests. Website assets, documentation and health remain public. Keep private keys on the server. Set comma-separated CORS_ORIGINS to restrict browser origins; default `*`. To load a local environment file, use `node --env-file=.env scripts/serve.mjs`.
+Open **http://localhost:3000**.
 
-## Vercel
+| Command | Purpose |
+| :--- | :--- |
+| `npm start` | Run the local HTTP server |
+| `npm run dev` | Restart automatically when files change |
+| `npm test` | Run the automated checks |
+| `npm run check` | Validate collection integrity and English coverage |
+| `npm run build` | Run the deployment validation step |
 
-Import this repository with Node.js 24 and Other as the framework. vercel.json supplies the build command, public output directory, function bundle and catch-all routing. Remove conflicting dashboard overrides. The function is api/index.js; the local listener is scripts/serve.mjs.
+<details>
+<summary><strong>Run with Docker</strong></summary>
 
-After deploying, open `/`, `/health`, `/api/v1/verses/10.15` and `/docs`. Keep the slash between the domain and path: `.vercel.app/api`. The homepage generates full example URLs from the actual deployment origin.
+```sh
+docker build -t chanakya-neeti-api .
+docker run --rm -p 3000:3000 chanakya-neeti-api
+```
 
-Automated checks verify API behavior and complete English coverage. Full editorial proofreading of the Tamil text and English interpretations remains pending; see docs/VERIFICATION.md for the checks performed.
+The supplied image uses Node.js 24 Alpine and runs as the `node` user. Docker execution has not been independently verified in this workspace.
+
+</details>
+
+## Deploy on Vercel
+
+1. Import this GitHub repository into Vercel.
+2. Select **Other** as the framework and **Node.js 24** as the runtime.
+3. Keep the root directory at the repository root.
+4. Let [`vercel.json`](vercel.json) supply the build command, output directory, routing and bundled files. Remove conflicting dashboard overrides.
+5. Deploy, then check the homepage, `/health`, `/read/1.1` and `/api/v1/verses/10.15`.
+
+| Setting | Repository configuration |
+| :--- | :--- |
+| Build command | `npm run build` |
+| Output directory | `public` |
+| Function entrypoint | `api/index.js` |
+| Included files | `data/**`, `public/**` |
+| Local server | `scripts/serve.mjs` |
+
+Keep the slash between the domain and path: **`.vercel.app/api`**. The website generates complete example URLs from its own deployment origin.
+
+## Configuration
+
+All configuration is optional.
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `PORT` | `3000` | Local server port |
+| `API_KEY` | Unset | Require `x-api-key` on `/api/v1` requests |
+| `CORS_ORIGINS` | `*` | Comma-separated allowed browser origins |
+
+To load a local environment file:
+
+```sh
+node --env-file=.env scripts/serve.mjs
+```
+
+Website pages, images and health stay public when an API key is enabled. Keep private keys on the server rather than in public frontend code.
+
+```js
+// Server-side example when your deployment requires a key.
+const response = await fetch(
+  'https://chanakya-neeti-api.vercel.app/api/v1/verses/10.15',
+  { headers: { 'x-api-key': process.env.API_KEY } }
+);
+```
+
+CORS allows all origins by default. It controls browser access; it is not a substitute for authentication. The API does not use cookies.
+
+## Project structure
+
+| Path | Responsibility |
+| :--- | :--- |
+| [`api/index.js`](api/index.js) | Vercel function entrypoint |
+| [`src/app.mjs`](src/app.mjs) | Shared routing, validation and response handling |
+| [`src/reader.mjs`](src/reader.mjs) | HTML reading view and numbered navigation |
+| [`public/`](public/) | Homepage, scripts, styles and illustrations |
+| [`data/english-meanings.json`](data/english-meanings.json) | Individual English explanations |
+| [`scripts/serve.mjs`](scripts/serve.mjs) | Local HTTP adapter |
+| [`scripts/validate-data.mjs`](scripts/validate-data.mjs) | Content integrity checks |
+| [`test/`](test/) | API, reader, HTTP and deployment-entrypoint checks |
+| [`vercel.json`](vercel.json) | Vercel deployment configuration |
+
+## Verification and contributing
+
+The latest local suite passed **47 checks**, including navigation through all 319 reader pages, chapter transitions, English coverage, examples, input validation, image delivery, 404 behavior and Vercel entrypoint handling.
+
+Full editorial proofreading remains pending. Passing software checks does not establish independent linguistic accuracy or browser layout review. See the [verification record](docs/VERIFICATION.md) and [development plan](docs/DEVELOPMENT_PLAN.md).
+
+Before proposing a change:
+
+1. Run `npm test` and `npm run build`.
+2. Keep verse IDs and available numbering intact.
+3. Update examples when changing response behavior.
+4. Keep English explanations concise and specific to their verses.
+
+**License:** the package is marked `UNLICENSED`; no open-source license has been granted.
+
+---
+
+<div align="center">
+
+**சாணக்கிய நீதி · Developed by Shyam**
+
+[Read the first verse](https://chanakya-neeti-api.vercel.app/read/1.1#browse) &nbsp; · &nbsp; [Build with the API](https://chanakya-neeti-api.vercel.app/docs)
+
+</div>
