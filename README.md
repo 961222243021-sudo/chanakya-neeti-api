@@ -1,145 +1,70 @@
 # சாணக்கிய நீதி API
 
-**Developed by Shyam.** An edition-aware Tamil REST API with a self-contained API playground. Version 1.0.0.
+Developed by **Shyam**. Version **1.1.0**.
 
-The implementation contains every numbered main-text entry detected in the supplied edition: **319 records across 17 chapters**. It preserves source numbering, raw extracted text, PDF page references, source attribution, and editorial status. The introduction, pronunciation notes, and appendix are accessible separately.
+A Tamil REST API with 319 numbered entries, 17 chapters, search, topic filters, daily/random selection and a responsive guide with readable verse previews.
 
-## Run
+## Run and test
 
-Requires Node.js 24. No runtime npm dependencies, database, login, or external AI service.
+Requires Node.js 24. No runtime dependencies or database.
 
 ```sh
 npm start
-```
-
-Open `http://localhost:3000/docs`. Test an endpoint:
-
-```sh
-curl http://localhost:3000/api/v1/verses/1.6
-curl 'http://localhost:3000/api/v1/verses?topic=money&chapter=1&limit=5'
-curl --get --data-urlencode 'q=சேமி' http://localhost:3000/api/v1/verses
-```
-
-```sh
 npm test
 npm run build
 ```
 
-`build` validates the dataset; there is no compilation step. Tests exercise the actual request handler. The original uploaded PDF is not bundled.
+Open `http://localhost:3000/`. The guide auto-loads today’s verse and shows JavaScript/Python examples. `/read/10.15` loads a specific verse in the reader.
+
+## Verse formatting
+
+- `text.transliteration_ta`: a clean single-line string.
+- `text.lines_ta`: trimmed nonempty lines in display order.
+- `text.meaning_ta`: the Tamil explanation.
+- `/api/v1/verses/10.15?format=text`: readable text with actual line breaks.
+- `/api/v1/daily?format=text`: daily verse as text.
+
+JSON correctly escapes line breaks inside string values. The API’s standard verse string is now single-line; use `lines_ta` to lay out the poem. Original raw text is optional and may still contain escaped line breaks.
+
+Normal JSON responses use `{data, meta}`. A single lookup returns the verse in `data`; daily returns it in `data.verse`. Arrays are returned by random and batch; search returns `{results, pagination}`. Public responses omit provenance and internal review metadata.
 
 ## Endpoints
 
-| GET path | Purpose |
+| GET | Purpose |
 | --- | --- |
-| `/health` | Runtime health and dataset checksum |
-| `/api/v1` | API identity, version and developer |
-| `/api/v1/verses` | Paginated browse, ranked keyword search and combined filters |
-| `/api/v1/verses/1.6` | Source chapter/verse lookup |
-| `/api/v1/verses/1.6/related` | Shared topic matches, with match explanation |
-| `/api/v1/chapters` | Chapter counts, verse numbers and observed gaps |
-| `/api/v1/chapters/13` | Browse an individual chapter |
-| `/api/v1/topics` | Topic taxonomy and counts |
-| `/api/v1/daily` | Deterministic daily verse in Asia/Kolkata |
-| `/api/v1/random` | Random records without duplication |
-| `/api/v1/batch?ids=1.6,2.1` | Ordered lookup for up to 50 IDs |
-| `/api/v1/export?format=ndjson` | Full or filtered JSON/NDJSON download |
-| `/api/v1/sources` | Translator, edition checksum and rights status |
-| `/api/v1/quality` | Review status, counts and numbering gaps |
-| `/api/v1/supplementary?page=112` | Introduction, notes and appendix by PDF page |
-| `/openapi.json` | OpenAPI 3.1 specification |
-| `/docs` | Interactive documentation and request playground |
+| `/api/v1` | API identity |
+| `/api/v1/verses/10.15` | One verse |
+| `/api/v1/verses` | Paginated search and browse |
+| `/api/v1/verses/10.15/related` | Related topic matches |
+| `/api/v1/daily` | Daily verse in Asia/Kolkata |
+| `/api/v1/random?count=3` | Unique random verses |
+| `/api/v1/chapters` | Chapter index and valid numbers |
+| `/api/v1/chapters/1` | Browse a chapter |
+| `/api/v1/topics` | Topic IDs and counts |
+| `/api/v1/batch?ids=1.6,10.15` | Ordered batch |
+| `/api/v1/export?format=ndjson` | JSON or NDJSON download |
+| `/api/v1/quality` | Dataset integrity summary |
+| `/health` | Health |
+| `/openapi.json` | OpenAPI 3.1 |
+| `/docs` | Guide and playground |
+| `/read/10.15` | HTML verse reader |
 
-### Filtering and search
+## Filters and errors
 
-`chapter=1..17`, `topic=money`, `review=reviewed|unreviewed` combine with AND. Topic IDs: `money`, `friendship`, `education`, `leadership`, `relationships`, `discipline`, `resilience`, `ethics`.
+Combine `chapter`, `topic`, and `review`. Use `q` for Tamil words or English topic keywords; `match=all` is the default and `match=any` broadens search. Search normalizes Unicode and whitespace. Encode Tamil query values. `page` starts at 1; `limit` defaults to 20 and is capped at 100. Random count is capped at 20; batch size is capped at 50. Daily accepts a real `YYYY-MM-DD` date and is deterministic for the date, filters and dataset version.
 
-`q` accepts Tamil words or English topic IDs, up to 200 characters. Separate terms with spaces or commas. `match=all` is the default; `match=any` broadens results. Search normalizes Unicode and spaces; literal substring and phrase matches determine rank. This is deterministic keyword search, not semantic AI search.
+Errors use `{error: {code, message, request_id}}`. Invalid parameters return 400, missing verses 404, and writes 405. Chapter 13’s unavailable numbers return 404. GET, HEAD and OPTIONS are supported.
 
-`page` defaults to 1; `limit` defaults to 20 and is capped at 100. `include_raw=true` adds unmodified PDF extraction. Empty results return an empty array and total 0. Unknown and repeated parameters fail with 400 on parameterized API routes.
+## Vercel
 
-`random` accepts `count=1..20`. `daily` accepts a real ISO calendar `date=YYYY-MM-DD`, defaults to the Indian date, and supports chapter/topic/review filters. Daily selection is stable for the same date, ordered filtered dataset, and dataset version. Changing the dataset may change the daily result. Random always returns an array; daily returns `{date, timezone, verse}`.
+Import the repository with Node.js 24 and Other as the framework. `vercel.json` supplies the build command, `public` output directory, function bundle and catch-all routing. Remove conflicting dashboard overrides. The function is `api/index.js`; the local listener is `scripts/serve.mjs`.
 
-### Response contract
+After deploying, open `/`, `/health`, `/api/v1/verses/10.15`, and `/docs`. Keep the slash between the domain and path: `.vercel.app/api`, never `.vercel.appapi`. The homepage’s copy button builds the full URL from its actual origin.
 
-Normal JSON responses use `{data, meta}`. `meta` contains `api_version`, `dataset_version`, and `developed_by: "Shyam"`. Search and browse data contain `{results, pagination}`. `pagination` contains `page`, `limit`, `total`, `pages`, and `has_next`.
+## Optional configuration
 
-Errors use `{error: {code, message, request_id}}`. HTTP status codes distinguish bad parameters (400), authentication failure (401), missing source verses (404), blocked writes (405), and unexpected failures (500). OpenAPI is a raw specification. JSON exports use `{dataset_version, sources, records}`; NDJSON exports contain one record per line.
+`PORT` defaults to 3000. Set `API_KEY` to require `x-api-key` on data endpoints. Set comma-separated `CORS_ORIGINS` to restrict browser origins; the default is `*`. Environment files are not loaded automatically; use `node --env-file=.env scripts/serve.mjs` locally. Do not expose private API keys in public frontend code.
 
-Read-only GET, HEAD and OPTIONS are supported. Cacheable responses have ETags, support conditional GET, and use a short public cache. Daily cache lifetime is 60 seconds, preventing a long stale daily response at midnight. Random and health use `no-store`. Responses protected by a configured API key also use `no-store`.
+Protected responses, health and random results use `no-store`. Other responses use short caching with ETag support. Exports contain records and a dataset version. Topic and related-verse results use keyword matching.
 
-## Configuration
-
-Environment variables:
-
-| Variable | Default | Behavior |
-| --- | --- | --- |
-| `PORT` | `3000` | Local HTTP port |
-| `API_KEY` | unset | When set, protect `/api/v1` data routes with `x-api-key` |
-| `CORS_ORIGINS` | `*` | Allowed browser origins, comma separated |
-
-API key checks use a constant-time digest comparison. API keys are not saved by the playground. CORS controls browser access; it is not authentication. Health, documentation, assets, and OpenAPI stay public. Configure secrets in the hosting dashboard or your shell; `.env` files are not loaded automatically. For a local env file, use `node --env-file=.env scripts/serve.mjs`.
-
-## Deploy
-
-### Vercel
-
-The explicit `api/index.js` entrypoint exports the shared Web Request/Response handler. `vercel.json` sets the Other framework preset, publishes `public/`, routes incoming paths to the function, and explicitly includes the dataset and page assets in the function bundle. The local server lives in `scripts/serve.mjs`, outside framework entrypoint detection.
-
-1. Put this folder's contents in a Git repository.
-2. Import that repository into Vercel.
-3. Use the **Other** framework preset and Node.js 24. The repository configuration sets the output directory to `public`; remove any conflicting dashboard override.
-4. Set environment variables if desired, then deploy.
-5. Check `/health`, `/docs`, and `/api/v1/verses/1.6` on the deployed URL.
-
-The project has been tested locally, including its HTTP adapter and explicit Vercel function export. Hosted verification remains pending: the current Vercel connection denied access to this project’s deployment details. Reference: https://vercel.com/docs/functions/runtimes/node-js
-
-### Docker or another Node host
-
-```sh
-docker build -t chanakya-neeti-api .
-docker run --rm -p 3000:3000 chanakya-neeti-api
-```
-
-Docker configuration is supplied but was not executed in this environment. The container runs as the unprivileged `node` user. All application data is immutable at runtime.
-
-For a high-traffic public service, configure host-level rate limits and abuse protection. There is no misleading process-local distributed rate limiter in this implementation.
-
-## Source fidelity and publication status
-
-- Source: *சாணக்கிய நீதி: அரசியலும் அந்தரங்கமும்*, Tamil edition, translated by Sandhya Natarajan and published by சந்தியா பதிப்பகம்.
-- Main text: PDF pages 8–107. PDF has 113 pages.
-- Chapter 13 lacks numbered entries 4, 5, 6, 7, and 11 in this source; they return 404. They are not silently synthesized or renumbered.
-- Sanskrit text appears in Tamil transliteration. The API does not label it Devanagari or claim to supply an independently verified Sanskrit original.
-- Every entry is currently **unreviewed**. Legacy font mapping repairs many encoding issues, but residual spacing, spelling, and glyph interpretation need proofreading.
-- Source punctuation uses a single final bar in entries 15.2 and 15.10; these boundaries are handled explicitly and labelled in `quality.boundary_method`.
-- Topic assignment is keyword-derived, not an editorial judgment. Historical prejudices remain in the source text; the API preserves the text as a historical source.
-- Software development is credited to Shyam. That attribution does not claim authorship of the book or translation.
-- Publication permission for the modern translation has not been established. No open license is asserted for the dataset or code in this package. Decide the code license separately from translation rights before a public release.
-
-### Re-extract or improve data
-
-Python with PyMuPDF is required only for source extraction, not for running the API:
-
-```sh
-python -m pip install PyMuPDF
-python scripts/extract_pdf.py /path/to/source.pdf --output data
-npm run check
-npm test
-```
-
-The importer targets this specific edition and its page ranges. Re-running replaces generated JSON; preserve any editorial corrections before doing so. After proofreading, update `quality.status` per record and regenerate `quality-report.json` counts. Use the raw text, source pages and source SHA-256 to audit changes. A different edition should get its own importer, source ID and numbering manifest.
-
-## Project map
-
-`src/app.mjs` is the shared request handler, `scripts/serve.mjs` is the local HTTP adapter and `api/index.js` is the Vercel function, `src/openapi.mjs` is the API contract, `data/` contains edition records, `public/` contains the documentation playground, `scripts/` contains extraction and integrity checks, and `test/` contains endpoint tests. See `docs/DEVELOPMENT_PLAN.md` for decisions, delivered scope and release gates.
-
-## Correct deployed URLs
-
-If your assigned domain is `chanakya-neeti-api.vercel.app`, open:
-
-- Homepage: https://chanakya-neeti-api.vercel.app/
-- Verse: https://chanakya-neeti-api.vercel.app/api/v1/verses/1.6
-- Daily: https://chanakya-neeti-api.vercel.app/api/v1/daily
-- Docs: https://chanakya-neeti-api.vercel.app/docs
-
-Always retain the slash before `api`: `.vercel.app/api`, never `.vercel.appapi`. The homepage generates the full endpoint from its actual deployed origin, so copied URLs use the correct domain.
+The software has automated checks; a full editorial review of every Tamil entry remains pending. Browser visual verification and live endpoint verification are not claimed by these local tests.

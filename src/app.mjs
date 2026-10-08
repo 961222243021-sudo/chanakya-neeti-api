@@ -6,11 +6,9 @@ const load = name => JSON.parse(readFileSync(new URL(`../data/${name}.json`, imp
 export const verses = load('verses');
 export const chapters = load('chapters');
 export const topics = load('topics');
-const sources = load('sources');
 const quality = load('quality-report');
-const supplementary = load('supplementary');
 const lookup = new Map(verses.map(v => [v.id, v]));
-const version = '1.0.0';
+const version = '1.1.0';
 const datasetVersion = createHash('sha256').update(JSON.stringify(verses)).digest('hex').slice(0, 16);
 const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
 const client = readFileSync(new URL('../public/client.js', import.meta.url), 'utf8');
@@ -39,11 +37,21 @@ function filter(params) {
   if (review !== null && !['reviewed', 'unreviewed'].includes(review)) fail(400, 'INVALID_PARAMETER', 'review must be reviewed or unreviewed.');
   return verses.filter(v => (!chapter || v.chapter === chapter) && (!topic || v.topics.includes(topic)) && (!review || v.quality.status === review));
 }
-const publicVerse = (v, raw = false) => { const { raw_text, ...rest } = v; return raw ? v : rest; };
+const publicVerse = (v, raw = false) => {
+  const { raw_text, source, quality: reviewDetails, ...rest } = v;
+  const lines = v.text.transliteration_ta.split(/\r?\n/u).map(line => line.trim()).filter(Boolean);
+  return { ...rest, text: { ...v.text, transliteration_ta: lines.join(' '), lines_ta: lines }, ...(raw ? { raw_text } : {}) };
+};
+function formatVerse(params, verse, extra = {}) {
+  const format = params.get('format') ?? 'json';
+  if (!['json', 'text'].includes(format)) fail(400, 'INVALID_PARAMETER', 'format must be json or text.');
+  if (format === 'json') return { data: Object.keys(extra).length ? { ...extra, verse } : verse };
+  return { body: `சாணக்கிய நீதி · ${verse.id}\n\n${verse.text.lines_ta.join('\n')}\n\n${verse.text.meaning_ta}\n\nDeveloped by Shyam\n`, type: 'text/plain; charset=utf-8' };
+}
 function verseById(id) {
   if (!/^(?:[1-9]|1[0-7])\.[1-9]\d*$/.test(id)) fail(400, 'INVALID_ID', 'Use chapter.verse, for example 1.6.');
   const record = lookup.get(id);
-  if (!record) fail(404, 'VERSE_NOT_FOUND', 'This verse number is not present in the supplied edition.');
+  if (!record) fail(404, 'VERSE_NOT_FOUND', 'Requested verse number is unavailable.');
   return record;
 }
 function utcDate(date) {
@@ -60,6 +68,7 @@ function search(params, candidates) {
   if (q === null) return candidates;
   if (!q.trim() || q.length > 200) fail(400, 'INVALID_QUERY', 'q must contain 1–200 characters.');
   const terms = q.split(/[\s,]+/u).filter(Boolean).map(normalize);
+  if (!terms.length || terms.some(t => !t)) fail(400, 'INVALID_QUERY', 'q must contain a searchable word.');
   const mode = params.get('match') ?? 'all';
   if (!['all', 'any'].includes(mode)) fail(400, 'INVALID_PARAMETER', 'match must be all or any.');
   return candidates.map(v => {
@@ -94,18 +103,19 @@ const listKeys = [...filterKeys, 'q', 'match', 'page', 'limit', 'include_raw'];
 async function route(url) {
   const path = url.pathname.replace(/\/$/, '') || '/';
   const params = url.searchParams;
-  if (['/', '/docs', '/api/docs'].includes(path)) return { body: html, type: 'text/html; charset=utf-8' };
+  if (['/', '/docs', '/api/docs'].includes(path) || /^\/read\/(?:[1-9]|1[0-7])\.[1-9]\d*$/u.test(path)) {
+    if (path.startsWith('/read/')) verseById(path.slice(6));
+    return { body: html, type: 'text/html; charset=utf-8' };
+  }
   if (path === '/client.js') return { body: client, type: 'text/javascript; charset=utf-8' };
   if (path === '/style.css') return { body: style, type: 'text/css; charset=utf-8' };
   if (['/openapi.json', '/api/v1/openapi.json'].includes(path)) return { body: JSON.stringify(openapi), type: 'application/json; charset=utf-8' };
   if (path === '/health') return { data: { status: 'ok', version, dataset_version: datasetVersion, records: verses.length }, cache: false };
-  if (path === '/api/v1') return { data: { name: 'சாணக்கிய நீதி API', developed_by: 'Shyam', version, dataset_version: datasetVersion, records: verses.length, chapters: chapters.length, docs: '/docs', quality: '/api/v1/quality', source_review: 'unreviewed' } };
+  if (path === '/api/v1') return { data: { name: 'சாணக்கிய நீதி API', developed_by: 'Shyam', version, dataset_version: datasetVersion, records: verses.length, chapters: chapters.length, docs: '/docs' } };
   if (path === '/api/v1/verses') { checkParams(params, listKeys); return { data: pageResults(params, search(params, filter(params))) }; }
   if (path === '/api/v1/chapters') { checkParams(params, []); return { data: chapters }; }
   if (path === '/api/v1/topics') { checkParams(params, []); return { data: topics.map(t => ({ ...t, count: verses.filter(v => v.topics.includes(t.id)).length })) }; }
-  if (path === '/api/v1/sources') { checkParams(params, []); return { data: sources }; }
   if (path === '/api/v1/quality') { checkParams(params, []); return { data: { ...quality, dataset_version: datasetVersion } }; }
-  if (path === '/api/v1/supplementary') { checkParams(params, ['page']); const page = integer(params, 'page', null, 1, 113); return { data: page ? supplementary.filter(p => p.page === page) : supplementary }; }
   if (path === '/api/v1/batch') {
     checkParams(params, ['ids', 'include_raw']);
     const ids = params.get('ids')?.split(',');
@@ -121,26 +131,26 @@ async function route(url) {
     return { data: candidates.slice(0, count).map(v => publicVerse(v, boolean(params, 'include_raw'))), cache: false };
   }
   if (path === '/api/v1/daily') {
-    checkParams(params, [...filterKeys, 'date', 'include_raw']);
+    checkParams(params, [...filterKeys, 'date', 'include_raw', 'format']);
     const date = utcDate(params.get('date') ?? today());
     const candidates = filter(params);
     if (!candidates.length) fail(404, 'NO_RESULTS', 'No verses match these filters.');
     const digest = createHash('sha256').update(`${datasetVersion}:${date}:${candidates.map(v => v.id).join(',')}`).digest();
-    return { data: { date, timezone: 'Asia/Kolkata', verse: publicVerse(candidates[digest.readUInt32BE(0) % candidates.length], boolean(params, 'include_raw')) }, ttl: 60 };
+    return { ...formatVerse(params, publicVerse(candidates[digest.readUInt32BE(0) % candidates.length], boolean(params, 'include_raw')), { date, timezone: 'Asia/Kolkata' }), ttl: 60 };
   }
   if (path === '/api/v1/export') {
     checkParams(params, [...filterKeys, 'format', 'include_raw']);
     const format = params.get('format') ?? 'json';
     if (!['json', 'ndjson'].includes(format)) fail(400, 'INVALID_PARAMETER', 'format must be json or ndjson.');
     const records = filter(params).map(v => publicVerse(v, boolean(params, 'include_raw')));
-    const body = format === 'json' ? JSON.stringify({ dataset_version: datasetVersion, sources, records }) : records.map(v => JSON.stringify(v)).join('\n') + (records.length ? '\n' : '');
+    const body = format === 'json' ? JSON.stringify({ dataset_version: datasetVersion, records }, null, 2) : records.map(v => JSON.stringify(v)).join('\n') + (records.length ? '\n' : '');
     return { body, type: format === 'json' ? 'application/json; charset=utf-8' : 'application/x-ndjson; charset=utf-8', attachment: `chanakya-neeti-${datasetVersion}.${format}` };
   }
   let match = path.match(/^\/api\/v1\/verses\/(\d+\.\d+)(\/related)?$/);
   if (match) {
-    checkParams(params, match[2] ? ['limit'] : ['include_raw']);
+    checkParams(params, match[2] ? ['limit'] : ['include_raw', 'format']);
     const v = verseById(match[1]);
-    if (!match[2]) return { data: publicVerse(v, boolean(params, 'include_raw')) };
+    if (!match[2]) return formatVerse(params, publicVerse(v, boolean(params, 'include_raw')));
     const limit = integer(params, 'limit', 5, 1, 20);
     const results = verses.filter(r => r.id !== v.id).map(r => ({ r, shared: r.topics.filter(t => v.topics.includes(t)) }))
       .filter(r => r.shared.length).sort((a, b) => b.shared.length - a.shared.length || a.r.chapter - b.r.chapter || a.r.verse - b.r.verse).slice(0, limit);
@@ -170,7 +180,7 @@ export async function handleRequest(req) {
     const url = new URL(req.url);
     if (url.pathname.startsWith('/api/v1') && !url.pathname.endsWith('openapi.json')) authorized(req);
     const result = await route(url);
-    const body = result.body ?? JSON.stringify({ data: result.data, meta: { api_version: version, dataset_version: datasetVersion, developed_by: 'Shyam' } });
+    const body = result.body ?? JSON.stringify({ data: result.data, meta: { api_version: version, dataset_version: datasetVersion, developed_by: 'Shyam' } }, null, 2);
     headers.set('content-type', result.type ?? 'application/json; charset=utf-8');
     if (result.type?.startsWith('text/html')) headers.set('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
     if (result.attachment) headers.set('content-disposition', `attachment; filename="${result.attachment}"`);

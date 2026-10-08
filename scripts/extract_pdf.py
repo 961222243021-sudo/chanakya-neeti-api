@@ -30,6 +30,9 @@ def normalize(text):
     text = text.translate(LEGACY).replace('\u200b','')
     # The font extracts visual pre-base vowel signs before their consonants.
     text = re.sub(r'([ெேை])(க்ஷ|[க-ஹ])',r'\2\1',text)
+    text = text.replace('ாி', 'ரி')
+    for broken, corrected in [('இல் லை','இல்லை'), ('தன் னை','தன்னை'), ('உன் னை','உன்னை'), ('நன் மை','நன்மை'), ('தன் மை','தன்மை'), ('பண் ப','பண்ப'), ('தொன் மை','தொன்மை')]:
+        text = text.replace(broken, corrected)
     return unicodedata.normalize('NFC',text)
 
 def main():

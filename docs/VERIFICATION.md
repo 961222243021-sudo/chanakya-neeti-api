@@ -21,3 +21,7 @@ Developed by Shyam. Checked on 2026-10-08 with Node.js 24.19.0.
 The HTTP test starts the real server on an ephemeral port and exercises health, raw OpenAPI, documentation, Tamil search, NDJSON download, HEAD and blocked writes. Other tests cover pagination, source gaps, filters, daily-date validation, random uniqueness, source attribution, batch ordering, related-topic explanations, errors, optional authentication, CORS and ETags.
 
 Passing these checks establishes software behavior and structural data integrity. It does not establish linguistic accuracy or cloud-hosted performance. Run `npm test` and `npm run build` to reproduce the automated checks.
+
+## Version 1.1.0 checks
+
+36 tests passed, including full collection line formatting, verse 10.15 Tamil correction, plain text, public metadata removal, reader URLs, comma-only search rejection, HTTP behavior and Vercel entrypoint checks. Dataset validation passed; client JavaScript passed a syntax check. Browser visual testing and live endpoint checks remain unverified.

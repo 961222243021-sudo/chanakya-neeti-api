@@ -7,9 +7,9 @@ const data = async path => { const r = await request(path); assert.equal(r.statu
 test('metadata credits Shyam and exposes edition record count', async () => {
   const d = await data('/api/v1'); assert.equal(d.developed_by, 'Shyam'); assert.equal(d.records, 319);
 });
-test('lookup has source pages, Unicode Tamil and honest review status', async () => {
-  const d = await data('/api/v1/verses/1.6'); assert.equal(d.id, '1.6'); assert.equal(d.quality.status, 'unreviewed');
-  assert.ok(d.source.pages.includes(9)); assert.ok(d.text.meaning_ta.includes('சேமி')); assert.ok(!('raw_text' in d));
+test('lookup contains clean Unicode Tamil without internal metadata', async () => {
+  const d = await data('/api/v1/verses/1.6'); assert.equal(d.id, '1.6'); assert.equal(d.source, undefined); assert.equal(d.quality, undefined);
+  assert.ok(d.text.meaning_ta.includes('சேமி')); assert.ok(!('raw_text' in d));
 });
 test('raw text is explicitly opt in', async () => { assert.ok((await data('/api/v1/verses/1.6?include_raw=true')).raw_text.includes('Ά')); });
 test('edition numbering gaps return 404 without invented content', async () => {
@@ -90,7 +90,6 @@ test('configured CORS only echoes allowed origins', async () => {
     const b = await request('/health', { headers: { origin: 'https://bad.example' } }); assert.equal(b.headers.get('access-control-allow-origin'), null);
   } finally { delete process.env.CORS_ORIGINS; }
 });
-test('supplementary notes kept outside numbered verse collection', async () => {
-  const d = await data('/api/v1/supplementary?page=112'); assert.equal(d.length, 1); assert.ok(d[0].text.length > 100);
-  assert.ok(verses.every(v => v.source.pages.every(p => p < 108)));
+test('public provenance routes are not exposed', async () => {
+  for (const path of ['/api/v1/sources', '/api/v1/supplementary', '/data/sources.json']) assert.equal((await request(path)).status, 404);
 });
