@@ -1,0 +1,66 @@
+[
+  {
+    "id": "money",
+    "names": {
+      "ta": "பணம் / செல்வம்",
+      "en": "Money"
+    },
+    "classification": "keyword_heuristic"
+  },
+  {
+    "id": "friendship",
+    "names": {
+      "ta": "நட்பு",
+      "en": "Friendship"
+    },
+    "classification": "keyword_heuristic"
+  },
+  {
+    "id": "education",
+    "names": {
+      "ta": "கல்வி",
+      "en": "Education"
+    },
+    "classification": "keyword_heuristic"
+  },
+  {
+    "id": "leadership",
+    "names": {
+      "ta": "தலைமை",
+      "en": "Leadership"
+    },
+    "classification": "keyword_heuristic"
+  },
+  {
+    "id": "relationships",
+    "names": {
+      "ta": "உறவுகள்",
+      "en": "Relationships"
+    },
+    "classification": "keyword_heuristic"
+  },
+  {
+    "id": "discipline",
+    "names": {
+      "ta": "ஒழுக்கம்",
+      "en": "Discipline"
+    },
+    "classification": "keyword_heuristic"
+  },
+  {
+    "id": "resilience",
+    "names": {
+      "ta": "மன உறுதி",
+      "en": "Resilience"
+    },
+    "classification": "keyword_heuristic"
+  },
+  {
+    "id": "ethics",
+    "names": {
+      "ta": "அறம்",
+      "en": "Ethics"
+    },
+    "classification": "keyword_heuristic"
+  }
+]

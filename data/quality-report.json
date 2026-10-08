@@ -1,0 +1,16 @@
+{
+  "chapters": 17,
+  "records": 319,
+  "reviewed_records": 0,
+  "numbering_gaps": {
+    "13": [
+      4,
+      5,
+      6,
+      7,
+      11
+    ]
+  },
+  "split_failures": [],
+  "legacy_characters_remaining": 0
+}

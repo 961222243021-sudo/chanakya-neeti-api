@@ -1,0 +1,11 @@
+{
+  "name": "chanakya-neeti-api-by-shyam",
+  "version": "1.0.0",
+  "description": "Edition-aware Tamil Chanakya Neeti REST API. Developed by Shyam.",
+  "author": "Shyam",
+  "private": true,
+  "type": "module",
+  "engines": { "node": "24.x" },
+  "scripts": { "start": "node server.mjs", "dev": "node --watch server.mjs", "test": "node --test", "check": "node scripts/validate-data.mjs", "build": "npm run check" },
+  "license": "UNLICENSED"
+}
