@@ -1,20 +1,21 @@
 import { readFileSync } from 'node:fs';
 import { createHash, randomInt, randomUUID, timingSafeEqual } from 'node:crypto';
-import { openapi } from './openapi.mjs';
 
 const load = name => JSON.parse(readFileSync(new URL(`../data/${name}.json`, import.meta.url), 'utf8'));
 export const verses = load('verses');
 export const chapters = load('chapters');
 export const topics = load('topics');
 const quality = load('quality-report');
+const englishMeanings = load('english-meanings');
 const lookup = new Map(verses.map(v => [v.id, v]));
-const version = '1.1.0';
-const datasetVersion = createHash('sha256').update(JSON.stringify(verses)).digest('hex').slice(0, 16);
+const version = '1.2.0';
+const datasetVersion = createHash('sha256').update(JSON.stringify({ verses, englishMeanings })).digest('hex').slice(0, 16);
 const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
 const client = readFileSync(new URL('../public/client.js', import.meta.url), 'utf8');
+const heroImage = readFileSync(new URL('../public/chanakya-modern.png', import.meta.url));
 const style = readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
 const normalize = text => text.normalize('NFC').toLocaleLowerCase('en').replace(/[\s\u200b-\u200d]+/gu, '');
-const searchable = new Map(verses.map(v => [v.id, normalize(`${v.text.meaning_ta} ${v.text.transliteration_ta} ${v.topics.join(' ')}`)]));
+const searchable = new Map(verses.map(v => [v.id, normalize(`${v.text.meaning_ta} ${v.text.transliteration_ta} ${v.topics.join(' ')} ${englishMeanings[v.id]}`)]));
 class ApiError extends Error { constructor(status, code, message) { super(message); this.status = status; this.code = code; } }
 const fail = (status, code, message) => { throw new ApiError(status, code, message); };
 function integer(params, key, fallback, min, max) {
@@ -40,13 +41,13 @@ function filter(params) {
 const publicVerse = (v, raw = false) => {
   const { raw_text, source, quality: reviewDetails, ...rest } = v;
   const lines = v.text.transliteration_ta.split(/\r?\n/u).map(line => line.trim()).filter(Boolean);
-  return { ...rest, text: { ...v.text, transliteration_ta: lines.join(' '), lines_ta: lines }, ...(raw ? { raw_text } : {}) };
+  return { ...rest, text: { ...v.text, transliteration_ta: lines.join(' '), lines_ta: lines, english_meaning: englishMeanings[v.id] }, ...(raw ? { raw_text } : {}) };
 };
 function formatVerse(params, verse, extra = {}) {
   const format = params.get('format') ?? 'json';
   if (!['json', 'text'].includes(format)) fail(400, 'INVALID_PARAMETER', 'format must be json or text.');
   if (format === 'json') return { data: Object.keys(extra).length ? { ...extra, verse } : verse };
-  return { body: `சாணக்கிய நீதி · ${verse.id}\n\n${verse.text.lines_ta.join('\n')}\n\n${verse.text.meaning_ta}\n\nDeveloped by Shyam\n`, type: 'text/plain; charset=utf-8' };
+  return { body: `சாணக்கிய நீதி · ${verse.id}\n\n${verse.text.lines_ta.join('\n')}\n\n${verse.text.meaning_ta}\n\nEnglish meaning\n${verse.text.english_meaning}\n\nDeveloped by Shyam\n`, type: 'text/plain; charset=utf-8' };
 }
 function verseById(id) {
   if (!/^(?:[1-9]|1[0-7])\.[1-9]\d*$/.test(id)) fail(400, 'INVALID_ID', 'Use chapter.verse, for example 1.6.');
@@ -109,7 +110,7 @@ async function route(url) {
   }
   if (path === '/client.js') return { body: client, type: 'text/javascript; charset=utf-8' };
   if (path === '/style.css') return { body: style, type: 'text/css; charset=utf-8' };
-  if (['/openapi.json', '/api/v1/openapi.json'].includes(path)) return { body: JSON.stringify(openapi), type: 'application/json; charset=utf-8' };
+  if (path === '/chanakya-modern.png') return { body: heroImage, type: 'image/png', ttl: 86400 };
   if (path === '/health') return { data: { status: 'ok', version, dataset_version: datasetVersion, records: verses.length }, cache: false };
   if (path === '/api/v1') return { data: { name: 'சாணக்கிய நீதி API', developed_by: 'Shyam', version, dataset_version: datasetVersion, records: verses.length, chapters: chapters.length, docs: '/docs' } };
   if (path === '/api/v1/verses') { checkParams(params, listKeys); return { data: pageResults(params, search(params, filter(params))) }; }
@@ -178,7 +179,7 @@ export async function handleRequest(req) {
     if (!['GET', 'HEAD'].includes(req.method)) { headers.set('allow', 'GET, HEAD, OPTIONS'); fail(405, 'METHOD_NOT_ALLOWED', 'This API is read-only.'); }
     if (req.url.length > 4096) fail(414, 'URI_TOO_LONG', 'Request URL exceeds 4096 characters.');
     const url = new URL(req.url);
-    if (url.pathname.startsWith('/api/v1') && !url.pathname.endsWith('openapi.json')) authorized(req);
+    if (url.pathname.startsWith('/api/v1')) authorized(req);
     const result = await route(url);
     const body = result.body ?? JSON.stringify({ data: result.data, meta: { api_version: version, dataset_version: datasetVersion, developed_by: 'Shyam' } }, null, 2);
     headers.set('content-type', result.type ?? 'application/json; charset=utf-8');

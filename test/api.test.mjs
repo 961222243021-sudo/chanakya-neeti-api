@@ -54,14 +54,13 @@ test('export JSON and NDJSON preserve record totals', async () => {
   const ndjson = await request('/api/v1/export?format=ndjson&chapter=1'); const lines = (await ndjson.text()).trim().split('\n').map(JSON.parse);
   assert.equal(lines.length, 16); assert.ok(lines.every(r => r.chapter === 1));
 });
-test('OpenAPI is a raw spec rather than an API envelope', async () => {
-  const r = await request('/openapi.json'); const spec = await r.json(); assert.equal(spec.openapi, '3.1.0'); assert.ok(spec.paths['/api/v1/verses']);
-  assert.ok(spec.components.schemas.Verse);
+test('removed specification routes return 404', async () => {
+  for (const path of ['/openapi.json', '/api/v1/openapi.json']) assert.equal((await request(path)).status, 404);
 });
 test('docs and local assets need no CDN', async () => {
   const r = await request('/docs'); assert.equal(r.status, 200); const html = await r.text(); assert.ok(html.includes('Developed by')); assert.ok(html.includes('Shyam'));
   assert.ok(r.headers.get('content-security-policy').includes("script-src 'self'"));
-  for (const path of ['/client.js', '/style.css']) assert.equal((await request(path)).status, 200);
+  for (const path of ['/client.js', '/style.css', '/chanakya-modern.png']) assert.equal((await request(path)).status, 200);
 });
 test('CORS preflight and HEAD', async () => {
   const r = await request('/api/v1/verses', { method: 'OPTIONS' }); assert.equal(r.status, 204); assert.ok(r.headers.get('access-control-allow-headers').includes('x-api-key'));
@@ -80,7 +79,7 @@ test('optional API key rejects and never publicly caches protected data', async 
   try {
     assert.equal((await request('/api/v1/verses')).status, 401);
     const r = await request('/api/v1/verses', { headers: { 'x-api-key': 'test-key' } }); assert.equal(r.status, 200); assert.equal(r.headers.get('cache-control'), 'no-store');
-    assert.equal((await request('/openapi.json')).status, 200);
+    assert.equal((await request('/docs')).status, 200);
   } finally { delete process.env.API_KEY; }
 });
 test('configured CORS only echoes allowed origins', async () => {

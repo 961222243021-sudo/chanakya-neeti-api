@@ -4,10 +4,10 @@ import { readFileSync, existsSync } from 'node:fs';
 import functionEntry from '../api/index.js';
 
 test('explicit Vercel Function serves homepage and nested API paths', async () => {
-  for (const path of ['/', '/docs', '/api/v1/verses/1.6', '/health', '/client.js', '/style.css']) {
+  for (const path of ['/', '/docs', '/api/v1/verses/1.6', '/health', '/client.js', '/style.css', '/chanakya-modern.png']) {
     const response = await functionEntry.fetch(new Request(`https://example.vercel.app${path}`));
     assert.equal(response.status, 200, path);
-    if (path === '/') { const html = await response.text(); assert.ok(html.includes('About this API')); assert.ok(html.includes('JavaScript example')); assert.ok(html.includes('Reader')); assert.ok(html.includes('copy-endpoint')); }
+    if (path === '/') { const html = await response.text(); assert.ok(html.includes('Fresh perspective.')); assert.ok(html.includes('JavaScript — render Tamil and English')); assert.ok(html.includes('Reader')); assert.ok(html.includes('copy-endpoint')); }
     if (path === '/api/v1/verses/1.6') assert.equal((await response.json()).data.id, '1.6');
   }
 });

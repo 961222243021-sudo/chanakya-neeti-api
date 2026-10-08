@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const load = name => JSON.parse(readFileSync(new URL(`../data/${name}.json`, import.meta.url), 'utf8'));
+const englishMeanings = load('english-meanings');
 const verses = load('verses'), chapters = load('chapters'), topics = load('topics'), quality = load('quality-report');
 assert.equal(verses.length, 319); assert.equal(chapters.length, 17);
 assert.equal(new Set(verses.map(v => v.id)).size, verses.length);
+assert.deepEqual(Object.keys(englishMeanings).sort(), verses.map(v => v.id).sort());
 for (const v of verses) {
+  assert.ok(typeof englishMeanings[v.id] === 'string' && englishMeanings[v.id].length >= 40 && englishMeanings[v.id].length < 600, v.id);
+  assert.ok(!englishMeanings[v.id].includes('\n'), v.id);
   assert.equal(v.id, `${v.chapter}.${v.verse}`);
   assert.ok(chapters.some(c => c.id === v.chapter && c.verse_numbers.includes(v.verse)));
   assert.ok(v.text.transliteration_ta.length > 5 && v.text.meaning_ta.length > 5, v.id);
@@ -19,4 +23,4 @@ assert.deepEqual(chapters[12].missing_within_observed_range, [4, 5, 6, 7, 11]);
 assert.equal(quality.records, verses.length);
 assert.equal(quality.reviewed_records, verses.filter(v => v.quality.status === 'reviewed').length);
 assert.deepEqual(quality.split_failures, []);
-console.log(`Validated ${verses.length} unique records, ${chapters.length} chapters, preserved source gaps, nonempty verse/meaning boundaries, and Unicode conversion.`);
+console.log(`Validated ${verses.length} unique records, ${chapters.length} chapters, complete English meanings, preserved numbering gaps, nonempty verse/meaning boundaries, and Unicode conversion.`);

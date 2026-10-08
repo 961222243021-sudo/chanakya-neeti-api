@@ -1,27 +1,15 @@
-# Verification record
+# Verification — version 1.2.0
 
-Developed by Shyam. Checked on 2026-10-08 with Node.js 24.19.0.
+Developed by Shyam. Checked on 2026-10-08.
 
-| Check | Result |
-| --- | --- |
-| Request-handler tests | 25 passed, 0 failed |
-| Explicit Vercel entrypoint and routing tests | 2 passed, 0 failed |
-| Real HTTP integration test | 1 passed, 0 failed |
-| Dataset validation | Passed: 319 unique main-text records, 17 chapters |
-| Source numbering gaps | Preserved: chapter 13, verses 4–7 and 11 |
-| Verse/meaning field boundaries | Nonempty for all 319 records |
-| Residual legacy Greek code points in normalized records | None detected |
-| Raw extraction and source pages | Present for every main-text record |
-| Browser screenshot / interaction review | Attempted; unavailable because Chromium is not installed |
-| Vercel deployment | Explicit function, routing and bundle configuration supplied; current connection denied deployment access, so hosted verification is pending |
-| Docker runtime | Configuration supplied; not built or executed |
-| Human proofreading | Not complete; all 319 records marked unreviewed |
-| Public translation rights | Not established |
+- 319 unique verses with complete, distinct plain-English explanations.
+- Both meanings included in single, browse, chapter, daily, random, batch, related and export responses; plain text includes English too.
+- Tamil/English search, filters, pagination, strict input validation, dates and selection behavior covered by automated tests.
+- Real HTTP adapter and explicit Vercel function entrypoint exercised locally.
+- Homepage and guide served without external script or stylesheet dependencies.
+- Complete endpoint and parameter reference embedded in HTML; removed specification routes return 404.
+- Supplied homepage image served byte-for-byte with the correct content type.
+- Public responses and HTML omit provenance fields.
+- Optional authentication, CORS, HEAD, preflight, caching and error behavior covered.
 
-The HTTP test starts the real server on an ephemeral port and exercises health, raw OpenAPI, documentation, Tamil search, NDJSON download, HEAD and blocked writes. Other tests cover pagination, source gaps, filters, daily-date validation, random uniqueness, source attribution, batch ordering, related-topic explanations, errors, optional authentication, CORS and ETags.
-
-Passing these checks establishes software behavior and structural data integrity. It does not establish linguistic accuracy or cloud-hosted performance. Run `npm test` and `npm run build` to reproduce the automated checks.
-
-## Version 1.1.0 checks
-
-36 tests passed, including full collection line formatting, verse 10.15 Tamil correction, plain text, public metadata removal, reader URLs, comma-only search rejection, HTTP behavior and Vercel entrypoint checks. Dataset validation passed; client JavaScript passed a syntax check. Browser visual testing and live endpoint checks remain unverified.
+Run `npm test`, `npm run build` and `node --check public/client.js` to reproduce checks. These verify software behavior and structural integrity, not an independent linguistic review. Full editorial review remains pending. Chromium is unavailable, so browser layout/interaction review is not claimed. Live endpoint verification is limited by the connected deployment permissions; GitHub deployment status is checked separately after publishing.

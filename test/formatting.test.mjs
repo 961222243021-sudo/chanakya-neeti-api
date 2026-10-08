@@ -8,7 +8,7 @@ test('verse 10.15 has separate lines and a single-line string without newline es
   assert.equal(text.lines_ta.length, 4); assert.ok(text.lines_ta.every(l => l.trim() === l && !l.includes('\n')));
   assert.equal(text.transliteration_ta, text.lines_ta.join(' '));assert.ok(!text.transliteration_ta.includes('\n'));
   assert.ok(text.meaning_ta.includes('பிரிவு')); assert.ok(!text.meaning_ta.includes('பிாிவு'));
-  assert.equal(payload.meta.api_version, '1.1.0');
+  assert.equal(payload.meta.api_version, '1.2.0');
 });
 test('plain text uses actual line breaks and a readable Tamil explanation', async () => {
   const response = await request('/api/v1/verses/10.15?format=text');const body = await response.text();
@@ -30,8 +30,8 @@ test('no public verse response or export contains provenance metadata', async ()
     }
   }
 });
-test('guide and OpenAPI do not advertise provenance or removed routes', async () => {
-  for (const path of ['/', '/openapi.json']) {
+test('homepage and guide do not advertise provenance or removed routes', async () => {
+  for (const path of ['/', '/docs']) {
     const body = await (await request(path)).text();
     for (const forbidden of ['source.pages', 'PDF pages', 'Sandhya', '/api/v1/sources', '/api/v1/supplementary']) assert.ok(!body.includes(forbidden), forbidden);
     assert.ok(body.includes('lines_ta'));
